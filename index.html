@@ -1201,7 +1201,7 @@ function renderQuarters() {
     clickOverlay.addEventListener('click', (e) => {
       const rect = bar.getBoundingClientRect();
       const pct = (e.clientX - rect.left) / rect.width;
-      const dayOffset = Math.floor(pct * cycleLength);
+      const dayOffset = Math.min(Math.round(pct * cycleLength), cycleLength - 1);
       const clickedDate = addDays(q.start, dayOffset);
       openMomentModal(isoDate(clickedDate), null);
     });
@@ -1374,6 +1374,19 @@ function openModal(qi, q) {
   document.getElementById('modalNotes').value = existing ? existing.notes : '';
   document.getElementById('modalOverlay').classList.add('open');
 }
+
+// Edit any confirmation entry directly from the log (including historical)
+function editConf(quarterIdx) {
+  const c = confirmations.find(x => x.quarterIdx === quarterIdx);
+  if (!c) return;
+  pendingQuarterIdx = quarterIdx;
+  const isHistorical = quarterIdx < 0;
+  document.getElementById('modalQuarterLabel').value = isHistorical ? `Historical entry · ${fmtDate(new Date(c.startDate))}` : `Cycle ${quarterIdx + 1}`;
+  document.getElementById('modalStartDate').value = c.startDate;
+  document.getElementById('modalDuration').value = c.duration || 5;
+  document.getElementById('modalNotes').value = c.notes || '';
+  document.getElementById('modalOverlay').classList.add('open');
+}
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('open');
   pendingQuarterIdx = null;
@@ -1531,7 +1544,10 @@ function renderMoments() {
       <td><span style="font-size:0.72rem;padding:0.15rem 0.55rem;border-radius:10px;background:${m.phase ? `rgba(0,0,0,0.2)` : 'transparent'};color:${m.phase ? PHASE_DATA[m.phase].color : 'var(--text-muted)'};">${phaseLabel}</span></td>
       <td><span style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.78rem"><span style="width:7px;height:7px;border-radius:50%;background:${col};box-shadow:0 0 5px ${col};display:inline-block"></span>${capitalize(m.type)}</span></td>
       <td style="color:var(--text-muted);font-size:0.77rem">${m.notes || '—'}</td>
-      <td><button onclick="deleteMoment('${m.id}')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.75rem;padding:0.2rem 0.4rem;border-radius:4px">&#x2715;</button></td>
+      <td style="white-space:nowrap">
+        <button onclick="openMomentModal('${m.date}', moments.find(x => x.id === '${m.id}'))" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.75rem;padding:0.2rem 0.4rem;border-radius:4px" title="Edit">&#9998;</button>
+        <button onclick="deleteMoment('${m.id}')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.75rem;padding:0.2rem 0.4rem;border-radius:4px" title="Remove">&#x2715;</button>
+      </td>
     </tr>`;
   }).join('');
   renderPatternBar();
@@ -1604,7 +1620,10 @@ function renderLog() {
       <td><span style="font-size:0.72rem;padding:0.15rem 0.5rem;border-radius:10px;background:${isHistorical ? 'rgba(139,92,246,0.15)' : 'rgba(96,165,250,0.12)'};color:${isHistorical ? '#a78bfa' : 'var(--follicular)'}">${qLabel}</span></td>
       <td>${gapCell}</td>
       <td style="color:var(--text-muted);font-size:0.77rem">${c.notes || '&mdash;'}</td>
-      <td><button onclick="deleteConf(${c.quarterIdx})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.75rem;padding:0.2rem 0.4rem;border-radius:4px" title="Remove">&#x2715;</button></td>
+      <td style="white-space:nowrap">
+        <button onclick="editConf(${c.quarterIdx})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.75rem;padding:0.2rem 0.4rem;border-radius:4px" title="Edit">&#9998;</button>
+        <button onclick="deleteConf(${c.quarterIdx})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.75rem;padding:0.2rem 0.4rem;border-radius:4px" title="Remove">&#x2715;</button>
+      </td>
     </tr>`;
   }).join('');
   renderCycleStats();
