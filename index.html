@@ -556,6 +556,53 @@
   .btn-primary { background: var(--menstrual); color: white; }
   .btn-primary:hover { opacity: 0.85; }
 
+  /* Backup bar */
+  .backup-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.55rem 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .backup-status {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: 1;
+    min-width: 160px;
+  }
+  .backup-status .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .backup-status .dot.ok { background: var(--ovulation); box-shadow: 0 0 5px var(--ovulation); }
+  .backup-status .dot.warn { background: var(--luteal); box-shadow: 0 0 5px var(--luteal); }
+  .btn-backup {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.73rem;
+    font-weight: 500;
+    padding: 0.35rem 0.8rem;
+    border-radius: 7px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-backup:hover { border-color: var(--ovulation); color: var(--ovulation); }
+  .btn-backup.restore:hover { border-color: var(--follicular); color: var(--follicular); }
+  #restoreFileInput { display: none; }
+
   /* Nav dots for current cycle position */
   .cycle-position-bar {
     background: var(--surface);
@@ -608,6 +655,17 @@
       <span style="font-size:0.78rem;color:var(--text-muted)">days</span>
     </div>
   </header>
+
+  <!-- Backup bar -->
+  <div class="backup-bar">
+    <div class="backup-status" id="backupStatus">
+      <div class="dot warn" id="backupDot"></div>
+      <span id="backupStatusText">No backup yet this session</span>
+    </div>
+    <button class="btn-backup" onclick="exportBackup()">&#8659; Export backup</button>
+    <button class="btn-backup restore" onclick="document.getElementById('restoreFileInput').click()">&#8657; Restore from backup</button>
+    <input type="file" id="restoreFileInput" accept=".json" onchange="importBackup(event)">
+  </div>
 
   <!-- Current position -->
   <div class="cycle-position-bar" id="cyclePositionBar">
@@ -871,6 +929,119 @@ function save() {
     confirmations,
     moments,
   }));
+  autoBackup();
+}
+
+// ── Backup & restore ──────────────────────────────────────────────────────────
+let lastBackupTime = null;
+
+function getBackupData() {
+  return {
+    version: 5,
+    exportedAt: new Date().toISOString(),
+    cycleLength,
+    lastPeriodStart: lastPeriodStart?.toISOString() || null,
+    confirmations,
+    moments,
+  };
+}
+
+function exportBackup() {
+  const data = getBackupData();
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = isoDate(new Date());
+  a.href = url;
+  a.download = `cycletracker_backup_${dateStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  lastBackupTime = new Date();
+  updateBackupStatus();
+}
+
+function autoBackup() {
+  // Auto-backup silently: saves a timestamped copy to Downloads via the same
+  // download mechanism, but only once per session per save to avoid flooding.
+  // We track the last auto-backup time in sessionStorage.
+  try {
+    const lastAuto = sessionStorage.getItem('lastAutoBackup');
+    const now = Date.now();
+    // Auto-backup at most once every 10 minutes within a session
+    if (lastAuto && now - parseInt(lastAuto) < 10 * 60 * 1000) {
+      updateBackupStatus();
+      return;
+    }
+    const data = getBackupData();
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dateStr = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 16);
+    a.href = url;
+    a.download = `cycletracker_auto_${dateStr}.json`;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    sessionStorage.setItem('lastAutoBackup', now.toString());
+    lastBackupTime = new Date();
+    updateBackupStatus();
+  } catch(e) {
+    console.warn('Auto-backup failed:', e);
+  }
+}
+
+function updateBackupStatus() {
+  const dot = document.getElementById('backupDot');
+  const text = document.getElementById('backupStatusText');
+  if (!dot || !text) return;
+  if (lastBackupTime) {
+    dot.className = 'dot ok';
+    text.textContent = `Last backup: ${lastBackupTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} — saved to Downloads (syncs to Drive)`;
+  } else {
+    dot.className = 'dot warn';
+    text.textContent = 'No backup yet — will auto-backup on next data change';
+  }
+}
+
+function importBackup(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.confirmations && !data.moments) {
+        alert('This doesn\'t look like a valid cycle tracker backup file.');
+        return;
+      }
+      if (!confirm(`Restore backup from ${data.exportedAt ? new Date(data.exportedAt).toLocaleString() : 'unknown date'}?\n\nThis will replace your current data.`)) return;
+      cycleLength = data.cycleLength || 26;
+      lastPeriodStart = data.lastPeriodStart ? new Date(data.lastPeriodStart) : null;
+      confirmations = data.confirmations || [];
+      moments = data.moments || [];
+      localStorage.setItem('cycleData', JSON.stringify({
+        cycleLength,
+        lastPeriodStart: lastPeriodStart?.toISOString(),
+        confirmations,
+        moments,
+      }));
+      lastBackupTime = new Date();
+      updateBackupStatus();
+      render();
+      alert('Backup restored successfully.');
+    } catch(err) {
+      alert('Could not read the backup file. Make sure it\'s a valid cycletracker JSON backup.');
+    }
+  };
+  reader.readAsText(file);
+  // Reset input so same file can be re-selected if needed
+  event.target.value = '';
 }
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
@@ -1492,6 +1663,7 @@ function render() {
   renderQuarters();
   renderLog();
   renderMoments();
+  updateBackupStatus();
 }
 
 // Close modals on overlay click
