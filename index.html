@@ -310,6 +310,93 @@
   .btn-confirm.confirmed { border-color: var(--ovulation); color: var(--ovulation); }
   .btn-confirm.confirmed:hover { border-color: var(--menstrual); color: var(--menstrual); }
 
+  /* Connection moment dots */
+  .moment-dot-row {
+    position: relative;
+    height: 18px;
+    margin-bottom: 2px;
+  }
+  .moment-dot {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    transform: translateX(-50%);
+    top: 3px;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .moment-dot:hover { transform: translateX(-50%) scale(1.4); }
+  .moment-dot.affectionate { background: #f9a8d4; box-shadow: 0 0 6px 2px rgba(249,168,212,0.6); }
+  .moment-dot.flirty      { background: #fde68a; box-shadow: 0 0 6px 2px rgba(253,230,138,0.6); }
+  .moment-dot.intimate    { background: #c084fc; box-shadow: 0 0 8px 3px rgba(192,132,252,0.7); }
+  .moment-dot.spontaneous { background: #6ee7b7; box-shadow: 0 0 6px 2px rgba(110,231,183,0.6); }
+
+  /* Clickable timeline overlay for logging */
+  .timeline-click-overlay {
+    position: absolute;
+    inset: 0;
+    cursor: crosshair;
+    z-index: 5;
+    border-radius: 6px;
+  }
+  .timeline-click-overlay:hover::after {
+    content: 'Click to log a moment';
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  /* Moment legend */
+  .moment-legend {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    align-items: center;
+  }
+  .moment-legend-label {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-right: 0.25rem;
+  }
+  .moment-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+  .moment-glow {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Moments section */
+  .moments-section { margin-top: 2rem; }
+  .moments-section h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
   /* Phase detail panel */
   .phase-panel {
     background: var(--surface);
@@ -545,6 +632,40 @@
   <!-- Quarters -->
   <div class="quarters-grid" id="quartersGrid"></div>
 
+  <!-- Moment legend -->
+  <div class="moment-legend">
+    <span class="moment-legend-label">Moments</span>
+    <div class="moment-legend-item"><div class="moment-glow" style="background:#f9a8d4;box-shadow:0 0 5px rgba(249,168,212,0.7)"></div>Affectionate</div>
+    <div class="moment-legend-item"><div class="moment-glow" style="background:#fde68a;box-shadow:0 0 5px rgba(253,230,138,0.7)"></div>Flirty</div>
+    <div class="moment-legend-item"><div class="moment-glow" style="background:#c084fc;box-shadow:0 0 5px rgba(192,132,252,0.7)"></div>Intimate</div>
+    <div class="moment-legend-item"><div class="moment-glow" style="background:#6ee7b7;box-shadow:0 0 5px rgba(110,231,183,0.7)"></div>Spontaneous</div>
+    <span style="font-size:0.7rem;color:var(--text-muted);margin-left:auto">Click the timeline bar or use the button below to log</span>
+  </div>
+
+  <!-- Moments log section -->
+  <div class="moments-section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem">
+      <h2>Connection moments</h2>
+      <button class="set-start-btn" onclick="openMomentModal(null, null)" style="font-size:0.76rem;padding:0.4rem 0.9rem">+ Log a moment</button>
+    </div>
+    <div id="momentsPatternBar" style="margin-bottom:1rem"></div>
+    <table class="log-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Cycle day</th>
+          <th>Phase</th>
+          <th>Type</th>
+          <th>Notes</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="momentsBody">
+        <tr><td colspan="6" class="empty-log">No moments logged yet — click the timeline or use the button above</td></tr>
+      </tbody>
+    </table>
+  </div>
+
   <!-- Log -->
   <div class="log-section">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem">
@@ -599,6 +720,45 @@
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
       <button class="btn btn-primary" onclick="submitConfirmation()">Confirm cycle</button>
+    </div>
+  </div>
+</div>
+
+<!-- Moment modal -->
+<div class="modal-overlay" id="momentModalOverlay">
+  <div class="modal">
+    <h3>Log a connection moment</h3>
+    <p>Record a day where she felt especially vibrant, affectionate, or connected.</p>
+    <div class="modal-fields">
+      <div class="field-row">
+        <label>Date</label>
+        <input type="date" id="momentDate">
+      </div>
+      <div class="field-row">
+        <label>Type of moment</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.25rem" id="momentTypeGrid">
+          <label style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem" id="type-affectionate">
+            <input type="radio" name="momentType" value="affectionate" style="accent-color:#f9a8d4"> <span style="color:#f9a8d4">&#9679;</span> Affectionate
+          </label>
+          <label style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem" id="type-flirty">
+            <input type="radio" name="momentType" value="flirty" style="accent-color:#fde68a"> <span style="color:#fde68a">&#9679;</span> Flirty
+          </label>
+          <label style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem" id="type-intimate">
+            <input type="radio" name="momentType" value="intimate" style="accent-color:#c084fc"> <span style="color:#c084fc">&#9679;</span> Intimate
+          </label>
+          <label style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem" id="type-spontaneous">
+            <input type="radio" name="momentType" value="spontaneous" style="accent-color:#6ee7b7"> <span style="color:#6ee7b7">&#9679;</span> Spontaneous
+          </label>
+        </div>
+      </div>
+      <div class="field-row">
+        <label>Notes (optional)</label>
+        <textarea id="momentNotes" placeholder="e.g. very playful at dinner, initiated affection, great conversation..."></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeMomentModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitMoment()" style="background:#c084fc">Save moment</button>
     </div>
   </div>
 </div>
@@ -687,18 +847,21 @@ const HORMONE_COLORS = {
   fsh: '#60a5fa',
 };
 
-let cycleLength = 28;
+let cycleLength = 26;
 let lastPeriodStart = null;
 let confirmations = [];
+let moments = [];
 let pendingQuarterIdx = null;
+let pendingMomentDate = null;
 
 // ── Persist ───────────────────────────────────────────────────────────────────
 function load() {
   try {
     const d = JSON.parse(localStorage.getItem('cycleData') || '{}');
-    cycleLength = d.cycleLength || 28;
+    cycleLength = d.cycleLength || 26;
     lastPeriodStart = d.lastPeriodStart ? new Date(d.lastPeriodStart) : null;
     confirmations = d.confirmations || [];
+    moments = d.moments || [];
   } catch(e) {}
 }
 function save() {
@@ -706,6 +869,7 @@ function save() {
     cycleLength,
     lastPeriodStart: lastPeriodStart?.toISOString(),
     confirmations,
+    moments,
   }));
 }
 
@@ -830,6 +994,49 @@ function renderQuarters() {
     }
 
     wrap.appendChild(bar);
+
+    // Moment dots row — glowing dots above bar for logged moments
+    const momentRow = document.createElement('div');
+    momentRow.className = 'moment-dot-row';
+    const qMoments = moments.filter(m => {
+      const md = new Date(m.date); md.setHours(0,0,0,0);
+      return md >= q.start && md <= q.end;
+    });
+    qMoments.forEach(m => {
+      const md = new Date(m.date); md.setHours(0,0,0,0);
+      const offset = (md - q.start) / (1000*60*60*24);
+      const pct = ((offset + 0.5) / cycleLength) * 100;
+      const dot = document.createElement('div');
+      dot.className = `moment-dot ${m.type}`;
+      dot.style.left = `${pct}%`;
+      dot.title = `${m.type} · ${fmtDate(md)}${m.notes ? ' · ' + m.notes : ''}`;
+      dot.addEventListener('click', () => openMomentModal(m.date, m));
+      dot.addEventListener('mousemove', (e) => {
+        const tip = document.getElementById('tooltip');
+        tip.innerHTML = `<strong style="color:var(--accent)">${capitalize(m.type)}</strong> · Day ${Math.floor(offset)+1}<br><span style="color:var(--text-muted);font-size:0.7rem">${fmtDate(md)}${m.notes ? '<br>' + m.notes : ''}</span>`;
+        tip.classList.add('show');
+      });
+      dot.addEventListener('mouseleave', hideTooltip);
+      momentRow.appendChild(dot);
+    });
+    wrap.appendChild(momentRow);
+
+    // Click overlay on bar to log a moment on that day
+    const clickOverlay = document.createElement('div');
+    clickOverlay.className = 'timeline-click-overlay';
+    clickOverlay.style.top = '0';
+    clickOverlay.style.position = 'absolute';
+    clickOverlay.style.height = '28px';
+    clickOverlay.addEventListener('click', (e) => {
+      const rect = bar.getBoundingClientRect();
+      const pct = (e.clientX - rect.left) / rect.width;
+      const dayOffset = Math.floor(pct * cycleLength);
+      const clickedDate = addDays(q.start, dayOffset);
+      openMomentModal(isoDate(clickedDate), null);
+    });
+    wrap.style.position = 'relative';
+    bar.style.position = 'relative';
+    bar.appendChild(clickOverlay);
 
     // Ticks
     const ticks = document.createElement('div');
@@ -1066,6 +1273,141 @@ document.getElementById('historicalModalOverlay').addEventListener('click', e =>
   if (e.target === document.getElementById('historicalModalOverlay')) closeHistoricalModal();
 });
 
+// ── Moment modal ──────────────────────────────────────────────────────────────
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+function openMomentModal(dateStr, existing) {
+  document.getElementById('momentDate').value = dateStr || isoDate(new Date());
+  // Reset radio
+  document.querySelectorAll('input[name="momentType"]').forEach(r => r.checked = false);
+  if (existing) {
+    const r = document.querySelector(`input[name="momentType"][value="${existing.type}"]`);
+    if (r) r.checked = true;
+  }
+  document.getElementById('momentNotes').value = existing ? existing.notes || '' : '';
+  // Store existing id for editing
+  document.getElementById('momentModalOverlay').dataset.editId = existing ? existing.id : '';
+  document.getElementById('momentModalOverlay').classList.add('open');
+}
+function closeMomentModal() {
+  document.getElementById('momentModalOverlay').classList.remove('open');
+}
+function submitMoment() {
+  const date = document.getElementById('momentDate').value;
+  const typeEl = document.querySelector('input[name="momentType"]:checked');
+  const notes = document.getElementById('momentNotes').value.trim();
+  if (!date) { alert('Please select a date'); return; }
+  if (!typeEl) { alert('Please select a moment type'); return; }
+
+  const editId = document.getElementById('momentModalOverlay').dataset.editId;
+  if (editId) {
+    const idx = moments.findIndex(m => m.id === editId);
+    if (idx !== -1) moments.splice(idx, 1);
+  }
+  // Calculate cycle day
+  const md = new Date(date); md.setHours(0,0,0,0);
+  let cycleDay = null;
+  let phaseKey = null;
+  if (lastPeriodStart) {
+    const totalDays = Math.round((md - lastPeriodStart) / (1000*60*60*24));
+    cycleDay = ((totalDays % cycleLength) + cycleLength) % cycleLength + 1;
+    phaseKey = getPhaseAtDay(cycleDay, cycleLength);
+  }
+  moments.push({
+    id: Date.now().toString(),
+    date,
+    type: typeEl.value,
+    notes,
+    cycleDay,
+    phase: phaseKey,
+    loggedAt: new Date().toISOString(),
+  });
+  save();
+  closeMomentModal();
+  render();
+}
+function deleteMoment(id) {
+  if (!confirm('Remove this moment?')) return;
+  moments = moments.filter(m => m.id !== id);
+  save();
+  render();
+}
+document.getElementById('momentModalOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('momentModalOverlay')) closeMomentModal();
+});
+
+// ── Render moments log ────────────────────────────────────────────────────────
+const MOMENT_COLORS = {
+  affectionate: '#f9a8d4',
+  flirty: '#fde68a',
+  intimate: '#c084fc',
+  spontaneous: '#6ee7b7',
+};
+function renderMoments() {
+  const body = document.getElementById('momentsBody');
+  if (moments.length === 0) {
+    body.innerHTML = '<tr><td colspan="6" class="empty-log">No moments logged yet — click the timeline or use the button above</td></tr>';
+    renderPatternBar();
+    return;
+  }
+  const sorted = [...moments].sort((a,b) => new Date(b.date) - new Date(a.date));
+  body.innerHTML = sorted.map(m => {
+    const col = MOMENT_COLORS[m.type] || 'var(--accent)';
+    const phaseLabel = m.phase ? PHASE_DATA[m.phase].label : '—';
+    return `<tr>
+      <td><strong>${fmtDate(new Date(m.date))}</strong></td>
+      <td style="color:var(--text-muted)">Day ${m.cycleDay || '—'}</td>
+      <td><span style="font-size:0.72rem;padding:0.15rem 0.55rem;border-radius:10px;background:${m.phase ? `rgba(0,0,0,0.2)` : 'transparent'};color:${m.phase ? PHASE_DATA[m.phase].color : 'var(--text-muted)'};">${phaseLabel}</span></td>
+      <td><span style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.78rem"><span style="width:7px;height:7px;border-radius:50%;background:${col};box-shadow:0 0 5px ${col};display:inline-block"></span>${capitalize(m.type)}</span></td>
+      <td style="color:var(--text-muted);font-size:0.77rem">${m.notes || '—'}</td>
+      <td><button onclick="deleteMoment('${m.id}')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.75rem;padding:0.2rem 0.4rem;border-radius:4px">&#x2715;</button></td>
+    </tr>`;
+  }).join('');
+  renderPatternBar();
+}
+
+// ── Pattern bar — which cycle days see the most moments ───────────────────────
+function renderPatternBar() {
+  const el = document.getElementById('momentsPatternBar');
+  if (!moments.length || !lastPeriodStart) { el.innerHTML = ''; return; }
+
+  // Count moments by cycle day
+  const counts = new Array(cycleLength).fill(0);
+  const types = new Array(cycleLength).fill(null);
+  moments.forEach(m => {
+    if (m.cycleDay && m.cycleDay >= 1 && m.cycleDay <= cycleLength) {
+      counts[m.cycleDay - 1]++;
+      types[m.cycleDay - 1] = m.type; // last type wins for color
+    }
+  });
+  const max = Math.max(...counts, 1);
+
+  const phases = getPhases(cycleLength);
+  let phaseHtml = '';
+  let accum = 0;
+  phases.forEach(p => {
+    phaseHtml += `<div style="position:absolute;left:${(accum/cycleLength)*100}%;width:${(p.days/cycleLength)*100}%;height:100%;background:${
+      p.key==='menstrual'?'var(--menstrual-soft)':p.key==='follicular'?'var(--follicular-soft)':p.key==='ovulation'?'var(--ovulation-soft)':'var(--luteal-soft)'
+    };opacity:0.4"></div>`;
+    accum += p.days;
+  });
+
+  const bars = counts.map((c, i) => {
+    if (!c) return '';
+    const col = MOMENT_COLORS[types[i]] || 'var(--accent)';
+    const h = Math.max(20, (c / max) * 100);
+    return `<div title="Day ${i+1}: ${c} moment${c>1?'s':''}" style="position:absolute;left:${((i+0.1)/cycleLength)*100}%;width:${(0.8/cycleLength)*100}%;bottom:0;height:${h}%;background:${col};border-radius:2px 2px 0 0;box-shadow:0 0 6px ${col};opacity:0.85"></div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div style="font-size:0.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem">Pattern — moments by cycle day</div>
+    <div style="position:relative;height:40px;background:var(--surface2);border-radius:6px;overflow:hidden">
+      ${phaseHtml}
+      ${bars}
+    </div>
+  `;
+}
+
 // ── Log table ─────────────────────────────────────────────────────────────────
 function renderLog() {
   const body = document.getElementById('logBody');
@@ -1149,6 +1491,7 @@ function render() {
   renderPositionBar();
   renderQuarters();
   renderLog();
+  renderMoments();
 }
 
 // Close modals on overlay click
