@@ -929,7 +929,6 @@ function save() {
     confirmations,
     moments,
   }));
-  autoBackup();
 }
 
 // ── Backup & restore ──────────────────────────────────────────────────────────
@@ -963,49 +962,16 @@ function exportBackup() {
   updateBackupStatus();
 }
 
-function autoBackup() {
-  // Auto-backup silently: saves a timestamped copy to Downloads via the same
-  // download mechanism, but only once per session per save to avoid flooding.
-  // We track the last auto-backup time in sessionStorage.
-  try {
-    const lastAuto = sessionStorage.getItem('lastAutoBackup');
-    const now = Date.now();
-    // Auto-backup at most once every 10 minutes within a session
-    if (lastAuto && now - parseInt(lastAuto) < 10 * 60 * 1000) {
-      updateBackupStatus();
-      return;
-    }
-    const data = getBackupData();
-    const json = JSON.stringify(data, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    const dateStr = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 16);
-    a.href = url;
-    a.download = `cycletracker_auto_${dateStr}.json`;
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    sessionStorage.setItem('lastAutoBackup', now.toString());
-    lastBackupTime = new Date();
-    updateBackupStatus();
-  } catch(e) {
-    console.warn('Auto-backup failed:', e);
-  }
-}
-
 function updateBackupStatus() {
   const dot = document.getElementById('backupDot');
   const text = document.getElementById('backupStatusText');
   if (!dot || !text) return;
   if (lastBackupTime) {
     dot.className = 'dot ok';
-    text.textContent = `Last backup: ${lastBackupTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} — saved to Downloads (syncs to Drive)`;
+    text.textContent = `Last backup: ${lastBackupTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} — saved to Downloads`;
   } else {
     dot.className = 'dot warn';
-    text.textContent = 'No backup yet — will auto-backup on next data change';
+    text.textContent = 'No backup yet — use Export backup to save your data';
   }
 }
 
