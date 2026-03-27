@@ -690,14 +690,18 @@
   <!-- Quarters -->
   <div class="quarters-grid" id="quartersGrid"></div>
 
+  <!-- Predictions card -->
+  <div id="predictionsCard" style="display:none;margin-bottom:1.5rem"></div>
+
   <!-- Moment legend -->
   <div class="moment-legend">
     <span class="moment-legend-label">Moments</span>
-    <div class="moment-legend-item"><div class="moment-glow" style="background:#f9a8d4;box-shadow:0 0 5px rgba(249,168,212,0.7)"></div>Affectionate</div>
-    <div class="moment-legend-item"><div class="moment-glow" style="background:#fde68a;box-shadow:0 0 5px rgba(253,230,138,0.7)"></div>Flirty</div>
-    <div class="moment-legend-item"><div class="moment-glow" style="background:#c084fc;box-shadow:0 0 5px rgba(192,132,252,0.7)"></div>Intimate</div>
-    <div class="moment-legend-item"><div class="moment-glow" style="background:#6ee7b7;box-shadow:0 0 5px rgba(110,231,183,0.7)"></div>Spontaneous</div>
-    <span style="font-size:0.7rem;color:var(--text-muted);margin-left:auto">Click the timeline bar or use the button below to log</span>
+    <div class="moment-legend-item"><div class="moment-glow" style="background:#f9a8d4;box-shadow:0 0 5px rgba(249,168,212,0.7)"></div>Affectionate Touch</div>
+    <div class="moment-legend-item"><div class="moment-glow" style="background:#fde68a;box-shadow:0 0 5px rgba(253,230,138,0.7)"></div>Flirtatious</div>
+    <div class="moment-legend-item"><div class="moment-glow" style="background:#67e8f9;box-shadow:0 0 5px rgba(103,232,249,0.7)"></div>Showed Herself</div>
+    <div class="moment-legend-item"><div class="moment-glow" style="background:#fb923c;box-shadow:0 0 5px rgba(251,146,60,0.7)"></div>Verbal / Text</div>
+    <div class="moment-legend-item"><div class="moment-glow" style="background:#c084fc;box-shadow:0 0 5px rgba(192,132,252,0.7)"></div>Intimacy</div>
+    <span style="font-size:0.7rem;color:var(--text-muted);margin-left:auto">Click timeline or use button to log</span>
   </div>
 
   <!-- Moments log section -->
@@ -713,13 +717,13 @@
           <th>Date</th>
           <th>Cycle day</th>
           <th>Phase</th>
-          <th>Type</th>
+          <th>Type &amp; Initiated</th>
           <th>Notes</th>
           <th></th>
         </tr>
       </thead>
       <tbody id="momentsBody">
-        <tr><td colspan="6" class="empty-log">No moments logged yet — click the timeline or use the button above</td></tr>
+        <tr><td colspan="7" class="empty-log">No moments logged yet — click the timeline or use the button above</td></tr>
       </tbody>
     </table>
   </div>
@@ -786,32 +790,58 @@
 <div class="modal-overlay" id="momentModalOverlay">
   <div class="modal">
     <h3>Log a connection moment</h3>
-    <p>Record a day where she felt especially vibrant, affectionate, or connected.</p>
+    <p>Record a moment of connection, affection, or intimacy.</p>
     <div class="modal-fields">
       <div class="field-row">
         <label>Date</label>
         <input type="date" id="momentDate">
       </div>
       <div class="field-row">
+        <label>Initiated by</label>
+        <div style="display:flex;gap:0.5rem;margin-top:0.25rem">
+          <label style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.9rem;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem;flex:1" id="init-her-label">
+            <input type="radio" name="initiatedBy" value="her" style="accent-color:#c084fc"> Her
+          </label>
+          <label style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.9rem;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem;flex:1" id="init-me-label">
+            <input type="radio" name="initiatedBy" value="me" style="accent-color:#60a5fa"> Me
+          </label>
+        </div>
+      </div>
+      <div class="field-row">
         <label>Type of moment</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.25rem" id="momentTypeGrid">
-          <label style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem" id="type-affectionate">
-            <input type="radio" name="momentType" value="affectionate" style="accent-color:#f9a8d4"> <span style="color:#f9a8d4">&#9679;</span> Affectionate
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.25rem">
+          <label style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem">
+            <input type="radio" name="momentType" value="touch" style="accent-color:#f9a8d4"> <span style="color:#f9a8d4">&#9679;</span> Affectionate Touch
           </label>
-          <label style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem" id="type-flirty">
-            <input type="radio" name="momentType" value="flirty" style="accent-color:#fde68a"> <span style="color:#fde68a">&#9679;</span> Flirty
+          <label style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem">
+            <input type="radio" name="momentType" value="flirty" style="accent-color:#fde68a"> <span style="color:#fde68a">&#9679;</span> Flirtatious
           </label>
-          <label style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem" id="type-intimate">
-            <input type="radio" name="momentType" value="intimate" style="accent-color:#c084fc"> <span style="color:#c084fc">&#9679;</span> Intimate
+          <label style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem" id="type-showed-label" onclick="toggleShowedSubtype(true)">
+            <input type="radio" name="momentType" value="showed" style="accent-color:#67e8f9" onclick="toggleShowedSubtype(true)"> <span style="color:#67e8f9">&#9679;</span> Showed Herself
           </label>
-          <label style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem" id="type-spontaneous">
-            <input type="radio" name="momentType" value="spontaneous" style="accent-color:#6ee7b7"> <span style="color:#6ee7b7">&#9679;</span> Spontaneous
+          <label style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem">
+            <input type="radio" name="momentType" value="verbal" style="accent-color:#fb923c" onclick="toggleShowedSubtype(false)"> <span style="color:#fb923c">&#9679;</span> Verbal / Text
+          </label>
+          <label style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem;grid-column:span 2">
+            <input type="radio" name="momentType" value="intimacy" style="accent-color:#c084fc" onclick="toggleShowedSubtype(false)"> <span style="color:#c084fc">&#9679;</span> Intimacy
+          </label>
+        </div>
+      </div>
+      <!-- Showed herself sub-toggle -->
+      <div class="field-row" id="showedSubtypeRow" style="display:none">
+        <label>Photo type</label>
+        <div style="display:flex;gap:0.5rem;margin-top:0.25rem">
+          <label style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.9rem;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem;flex:1">
+            <input type="radio" name="showedSubtype" value="general" style="accent-color:#67e8f9"> General
+          </label>
+          <label style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.9rem;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.82rem;flex:1">
+            <input type="radio" name="showedSubtype" value="explicit" style="accent-color:#67e8f9"> Explicit
           </label>
         </div>
       </div>
       <div class="field-row">
         <label>Notes (optional)</label>
-        <textarea id="momentNotes" placeholder="e.g. very playful at dinner, initiated affection, great conversation..."></textarea>
+        <textarea id="momentNotes" placeholder="e.g. very playful at dinner, held my hand, sent a sweet text..."></textarea>
       </div>
     </div>
     <div class="modal-actions">
@@ -1156,7 +1186,10 @@ function renderQuarters() {
       dot.addEventListener('click', () => openMomentModal(m.date, m));
       dot.addEventListener('mousemove', (e) => {
         const tip = document.getElementById('tooltip');
-        tip.innerHTML = `<strong style="color:var(--accent)">${capitalize(m.type)}</strong> · Day ${Math.floor(offset)+1}<br><span style="color:var(--text-muted);font-size:0.7rem">${fmtDate(md)}${m.notes ? '<br>' + m.notes : ''}</span>`;
+        const tLabel = MOMENT_LABELS[m.type] || capitalize(m.type);
+        const initStr = m.initiatedBy ? ` · ${capitalize(m.initiatedBy)}` : '';
+        const subStr = m.showedSubtype ? ` (${capitalize(m.showedSubtype)})` : '';
+        tip.innerHTML = `<strong style="color:var(--accent)">${tLabel}${subStr}</strong>${initStr} · Day ${Math.floor(offset)+1}<br><span style="color:var(--text-muted);font-size:0.7rem">${fmtDate(md)}${m.notes ? '<br>' + m.notes : ''}</span>`;
         tip.classList.add('show');
       });
       dot.addEventListener('mouseleave', hideTooltip);
@@ -1432,16 +1465,33 @@ document.getElementById('historicalModalOverlay').addEventListener('click', e =>
 // ── Moment modal ──────────────────────────────────────────────────────────────
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
+function toggleShowedSubtype(show) {
+  document.getElementById('showedSubtypeRow').style.display = show ? '' : 'none';
+  if (!show) document.querySelectorAll('input[name="showedSubtype"]').forEach(r => r.checked = false);
+}
+
 function openMomentModal(dateStr, existing) {
   document.getElementById('momentDate').value = dateStr || isoDate(new Date());
-  // Reset radio
   document.querySelectorAll('input[name="momentType"]').forEach(r => r.checked = false);
+  document.querySelectorAll('input[name="initiatedBy"]').forEach(r => r.checked = false);
+  document.querySelectorAll('input[name="showedSubtype"]').forEach(r => r.checked = false);
+  toggleShowedSubtype(false);
   if (existing) {
     const r = document.querySelector(`input[name="momentType"][value="${existing.type}"]`);
     if (r) r.checked = true;
+    if (existing.type === 'showed') {
+      toggleShowedSubtype(true);
+      if (existing.showedSubtype) {
+        const sr = document.querySelector(`input[name="showedSubtype"][value="${existing.showedSubtype}"]`);
+        if (sr) sr.checked = true;
+      }
+    }
+    if (existing.initiatedBy) {
+      const ir = document.querySelector(`input[name="initiatedBy"][value="${existing.initiatedBy}"]`);
+      if (ir) ir.checked = true;
+    }
   }
   document.getElementById('momentNotes').value = existing ? existing.notes || '' : '';
-  // Store existing id for editing
   document.getElementById('momentModalOverlay').dataset.editId = existing ? existing.id : '';
   document.getElementById('momentModalOverlay').classList.add('open');
 }
@@ -1451,17 +1501,19 @@ function closeMomentModal() {
 function submitMoment() {
   const date = document.getElementById('momentDate').value;
   const typeEl = document.querySelector('input[name="momentType"]:checked');
+  const initEl = document.querySelector('input[name="initiatedBy"]:checked');
+  const subtypeEl = document.querySelector('input[name="showedSubtype"]:checked');
   const notes = document.getElementById('momentNotes').value.trim();
   if (!date) { alert('Please select a date'); return; }
   if (!typeEl) { alert('Please select a moment type'); return; }
+  if (!initEl) { alert('Please select who initiated'); return; }
 
   const editId = document.getElementById('momentModalOverlay').dataset.editId;
   if (editId) {
     const idx = moments.findIndex(m => m.id === editId);
     if (idx !== -1) moments.splice(idx, 1);
   }
-  // Calculate cycle day
-  const md = new Date(date); md.setHours(0,0,0,0);
+  const md = parseDate(date);
   let cycleDay = null;
   let phaseKey = null;
   if (lastPeriodStart) {
@@ -1473,6 +1525,8 @@ function submitMoment() {
     id: Date.now().toString(),
     date,
     type: typeEl.value,
+    showedSubtype: typeEl.value === 'showed' && subtypeEl ? subtypeEl.value : null,
+    initiatedBy: initEl.value,
     notes,
     cycleDay,
     phase: phaseKey,
@@ -1492,29 +1546,45 @@ document.getElementById('momentModalOverlay').addEventListener('click', e => {
   if (e.target === document.getElementById('momentModalOverlay')) closeMomentModal();
 });
 
-// ── Render moments log ────────────────────────────────────────────────────────
+// ── Moment config ─────────────────────────────────────────────────────────────
 const MOMENT_COLORS = {
-  affectionate: '#f9a8d4',
-  flirty: '#fde68a',
-  intimate: '#c084fc',
-  spontaneous: '#6ee7b7',
+  touch:    '#f9a8d4',
+  flirty:   '#fde68a',
+  showed:   '#67e8f9',
+  verbal:   '#fb923c',
+  intimacy: '#c084fc',
 };
+const MOMENT_LABELS = {
+  touch:    'Affectionate Touch',
+  flirty:   'Flirtatious',
+  showed:   'Showed Herself',
+  verbal:   'Verbal / Text',
+  intimacy: 'Intimacy',
+};
+
+// ── Render moments log ────────────────────────────────────────────────────────
 function renderMoments() {
   const body = document.getElementById('momentsBody');
   if (moments.length === 0) {
-    body.innerHTML = '<tr><td colspan="6" class="empty-log">No moments logged yet — click the timeline or use the button above</td></tr>';
+    body.innerHTML = '<tr><td colspan="7" class="empty-log">No moments logged yet — click the timeline or use the button above</td></tr>';
     renderPatternBar();
+    renderPredictions();
     return;
   }
   const sorted = [...moments].sort((a,b) => new Date(b.date) - new Date(a.date));
   body.innerHTML = sorted.map(m => {
     const col = MOMENT_COLORS[m.type] || 'var(--accent)';
     const phaseLabel = m.phase ? PHASE_DATA[m.phase].label : '—';
+    const typeLabel = MOMENT_LABELS[m.type] || capitalize(m.type);
+    const subtypeLabel = m.showedSubtype ? ` <span style="font-size:0.65rem;opacity:0.7">(${capitalize(m.showedSubtype)})</span>` : '';
+    const initBadge = m.initiatedBy
+      ? `<span style="font-size:0.65rem;padding:0.1rem 0.4rem;border-radius:10px;background:${m.initiatedBy==='her'?'rgba(192,132,252,0.15)':'rgba(96,165,250,0.15)'};color:${m.initiatedBy==='her'?'#c084fc':'#60a5fa'};margin-left:0.3rem">${capitalize(m.initiatedBy)}</span>`
+      : '';
     return `<tr>
       <td><strong>${fmtDate(parseDate(m.date))}</strong></td>
       <td style="color:var(--text-muted)">Day ${m.cycleDay || '—'}</td>
-      <td><span style="font-size:0.72rem;padding:0.15rem 0.55rem;border-radius:10px;background:${m.phase ? `rgba(0,0,0,0.2)` : 'transparent'};color:${m.phase ? PHASE_DATA[m.phase].color : 'var(--text-muted)'};">${phaseLabel}</span></td>
-      <td><span style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.78rem"><span style="width:7px;height:7px;border-radius:50%;background:${col};box-shadow:0 0 5px ${col};display:inline-block"></span>${capitalize(m.type)}</span></td>
+      <td><span style="font-size:0.72rem;padding:0.15rem 0.55rem;border-radius:10px;background:${m.phase ? 'rgba(0,0,0,0.2)' : 'transparent'};color:${m.phase ? PHASE_DATA[m.phase].color : 'var(--text-muted)'};">${phaseLabel}</span></td>
+      <td><span style="display:inline-flex;align-items:center;gap:0.4rem;font-size:0.78rem;flex-wrap:wrap"><span style="width:7px;height:7px;border-radius:50%;background:${col};box-shadow:0 0 5px ${col};display:inline-block;flex-shrink:0"></span>${typeLabel}${subtypeLabel}${initBadge}</span></td>
       <td style="color:var(--text-muted);font-size:0.77rem">${m.notes || '—'}</td>
       <td style="white-space:nowrap">
         <button onclick="openMomentModal('${m.date}', moments.find(x => x.id === '${m.id}'))" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.75rem;padding:0.2rem 0.4rem;border-radius:4px" title="Edit">&#9998;</button>
@@ -1523,6 +1593,7 @@ function renderMoments() {
     </tr>`;
   }).join('');
   renderPatternBar();
+  renderPredictions();
 }
 
 // ── Pattern bar — which cycle days see the most moments ───────────────────────
@@ -1565,6 +1636,122 @@ function renderPatternBar() {
       ${bars}
     </div>
   `;
+}
+
+// ── Prediction engine ─────────────────────────────────────────────────────────
+function computePredictions() {
+  // Need at least 3 moments to predict
+  if (moments.length < 3 || !lastPeriodStart) return [];
+
+  // Build a map of type -> list of cycle days where it occurred
+  const byType = {};
+  moments.forEach(m => {
+    if (!m.cycleDay) return;
+    if (!byType[m.type]) byType[m.type] = [];
+    byType[m.type].push(m.cycleDay);
+  });
+
+  const predictions = [];
+  const today = new Date(); today.setHours(0,0,0,0);
+  const quarters = getQuarters();
+
+  Object.entries(byType).forEach(([type, days]) => {
+    if (days.length < 2) return;
+    // Calculate mean and std dev of cycle days
+    const mean = days.reduce((a,b) => a+b, 0) / days.length;
+    const variance = days.reduce((a,b) => a + Math.pow(b-mean,2), 0) / days.length;
+    const std = Math.sqrt(variance);
+    const windowStart = Math.max(1, Math.round(mean - std));
+    const windowEnd = Math.min(cycleLength, Math.round(mean + std));
+    const confidence = days.length >= 5 ? 'high' : days.length >= 3 ? 'medium' : 'low';
+
+    // Project onto current and future quarters
+    quarters.forEach((q, qi) => {
+      const predStart = addDays(q.start, windowStart - 1);
+      const predEnd = addDays(q.start, windowEnd - 1);
+      // Only show future predictions (not past)
+      if (predEnd >= today) {
+        predictions.push({ type, windowStart, windowEnd, mean: Math.round(mean), confidence, cycleIdx: qi, predStart, predEnd, count: days.length });
+      }
+    });
+  });
+
+  return predictions.sort((a,b) => a.predStart - b.predStart);
+}
+
+function renderPredictions() {
+  const card = document.getElementById('predictionsCard');
+  if (!card) return;
+  const preds = computePredictions();
+
+  if (preds.length === 0) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = 'block';
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const rows = preds.slice(0, 8).map(p => {
+    const col = MOMENT_COLORS[p.type] || '#888';
+    const label = MOMENT_LABELS[p.type] || p.type;
+    const daysAway = Math.round((p.predStart - today) / (1000*60*60*24));
+    const timing = daysAway < 0 ? `<span style="color:var(--text-muted)">In progress</span>`
+      : daysAway === 0 ? `<span style="color:var(--ovulation)">Today</span>`
+      : `<span style="color:var(--text)">In ${daysAway}d</span>`;
+    const confColor = p.confidence === 'high' ? 'var(--ovulation)' : p.confidence === 'medium' ? 'var(--luteal)' : 'var(--text-muted)';
+    return `<tr>
+      <td><span style="display:inline-flex;align-items:center;gap:0.4rem"><span style="width:7px;height:7px;border-radius:50%;background:${col};box-shadow:0 0 4px ${col};display:inline-block"></span>${label}</span></td>
+      <td style="color:var(--text-muted)">Cycle ${p.cycleIdx+1} · Day ${p.windowStart}${p.windowEnd !== p.windowStart ? '–'+p.windowEnd : ''}</td>
+      <td>${fmtShort(p.predStart)}${p.windowEnd !== p.predStart ? ' – '+fmtShort(p.predEnd) : ''}</td>
+      <td>${timing}</td>
+      <td><span style="font-size:0.7rem;color:${confColor};text-transform:uppercase;letter-spacing:0.04em">${p.confidence}</span> <span style="font-size:0.68rem;color:var(--text-muted)">(${p.count} data pts)</span></td>
+    </tr>`;
+  }).join('');
+
+  card.innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+      <div style="padding:1rem 1.4rem 0.75rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-family:'Playfair Display',serif;font-size:1rem;font-style:italic;color:var(--text-muted)">Predicted windows</div>
+          <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.15rem;opacity:0.7">Based on historical cycle day patterns · updates as you log more moments</div>
+        </div>
+      </div>
+      <table class="log-table" style="margin:0">
+        <thead><tr>
+          <th>Type</th><th>Cycle day window</th><th>Dates</th><th>Timing</th><th>Confidence</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+
+  // Also render prediction bands on timelines
+  renderPredictionBands(preds);
+}
+
+function renderPredictionBands(preds) {
+  // Add soft glowing bands to each quarter's timeline
+  const quarters = getQuarters();
+  quarters.forEach((q, qi) => {
+    const card = document.querySelectorAll('.quarter-card')[qi];
+    if (!card) return;
+    const bar = card.querySelector('.timeline-bar');
+    if (!bar) return;
+    // Remove old bands
+    card.querySelectorAll('.pred-band').forEach(b => b.remove());
+    // Add new bands for this quarter
+    preds.filter(p => p.cycleIdx === qi).forEach(p => {
+      const col = MOMENT_COLORS[p.type] || '#888';
+      const leftPct = ((p.windowStart - 1) / cycleLength) * 100;
+      const widthPct = ((p.windowEnd - p.windowStart + 1) / cycleLength) * 100;
+      const band = document.createElement('div');
+      band.className = 'pred-band';
+      band.style.cssText = `position:absolute;top:-10px;left:${leftPct}%;width:${widthPct}%;height:6px;background:${col};opacity:0.35;border-radius:3px;box-shadow:0 0 8px 2px ${col};pointer-events:none;z-index:6`;
+      band.title = `${MOMENT_LABELS[p.type] || p.type} — predicted window`;
+      bar.style.position = 'relative';
+      bar.appendChild(band);
+    });
+  });
 }
 
 // ── Log table ─────────────────────────────────────────────────────────────────
@@ -1653,7 +1840,7 @@ function render() {
   renderPositionBar();
   renderQuarters();
   renderLog();
-  renderMoments();
+  renderMoments(); // also calls renderPredictions and renderPatternBar internally
   updateBackupStatus();
 }
 
