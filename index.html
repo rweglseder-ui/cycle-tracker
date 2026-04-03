@@ -759,11 +759,11 @@
 <!-- Confirm modal -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
-    <h3>Confirm cycle</h3>
-    <p>Log the actual start date of this menstrual period to keep predictions accurate over time.</p>
+    <h3>Confirm cycle start</h3>
+    <p>Enter the actual first day of this period. This corrects the timeline and improves future predictions.</p>
     <div class="modal-fields">
       <div class="field-row">
-        <label>Quarter</label>
+        <label>Cycle</label>
         <input type="text" id="modalQuarterLabel" readonly style="color:var(--text-muted)">
       </div>
       <div class="field-row">
@@ -771,17 +771,22 @@
         <input type="date" id="modalStartDate">
       </div>
       <div class="field-row">
-        <label>Period duration (days)</label>
-        <input type="number" id="modalDuration" value="5" min="1" max="10">
+        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.82rem">
+          <input type="checkbox" id="modalDurationKnown" onchange="document.getElementById('modalDurationRow').style.display=this.checked?'flex':'none'" style="accent-color:var(--accent)">
+          I know the duration
+        </label>
+        <div id="modalDurationRow" style="display:none;align-items:center;gap:0.5rem;margin-top:0.4rem">
+          <input type="number" id="modalDuration" value="5" min="1" max="10" style="width:70px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:inherit;font-size:0.85rem;padding:0.3rem 0.5rem;text-align:center"> <span style="font-size:0.82rem;color:var(--text-muted)">days</span>
+        </div>
       </div>
       <div class="field-row">
         <label>Notes (optional)</label>
-        <textarea id="modalNotes" placeholder="e.g. heavy flow, cramps, mood…"></textarea>
+        <textarea id="modalNotes" placeholder="e.g. heavy flow, cramps, mood..."></textarea>
       </div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="submitConfirmation()">Confirm cycle</button>
+      <button class="btn btn-primary" onclick="submitConfirmation()">Confirm</button>
     </div>
   </div>
 </div>
@@ -1086,11 +1091,19 @@ function getQuarters() {
         d.setDate(d.getDate() - 7);
         return d;
       })();
+  base.setHours(0,0,0,0);
 
+  // Build quarters, using confirmed actual start dates when available
+  // so that Cycle 2 starts on the real confirmed date, not a prediction
+  let prevStart = base;
   for (let i = 0; i < 4; i++) {
-    const start = addDays(base, i * cycleLength);
+    // If this quarter has a confirmed start, use it
+    const conf = confirmations.find(c => c.quarterIdx === i);
+    const start = conf ? parseDate(conf.startDate) : (i === 0 ? prevStart : addDays(prevStart, cycleLength));
+    start.setHours(0,0,0,0);
     const end = addDays(start, cycleLength - 1);
     quarters.push({ idx: i, start, end });
+    prevStart = start;
   }
   return quarters;
 }
@@ -1373,10 +1386,16 @@ function positionTooltip(e) {
 function openModal(qi, q) {
   pendingQuarterIdx = qi;
   const existing = confirmations.find(c => c.quarterIdx === qi);
-  document.getElementById('modalQuarterLabel').value = `Cycle ${qi + 1} · ${fmtShort(q.start)} – ${fmtShort(q.end)}`;
-  document.getElementById('modalStartDate').value = existing ? existing.startDate : isoDate(q.start);
-  document.getElementById('modalDuration').value = existing ? existing.duration : 5;
-  document.getElementById('modalNotes').value = existing ? existing.notes : '';
+  const today = isoDate(new Date());
+  document.getElementById('modalQuarterLabel').value = `Cycle ${qi + 1}`;
+  // Default to today for the active cycle, existing date if editing, predicted start otherwise
+  document.getElementById('modalStartDate').value = existing ? existing.startDate : today;
+  // Duration checkbox
+  const hasDuration = existing && existing.duration != null;
+  document.getElementById('modalDurationKnown').checked = hasDuration;
+  document.getElementById('modalDurationRow').style.display = hasDuration ? 'flex' : 'none';
+  document.getElementById('modalDuration').value = existing && existing.duration ? existing.duration : 5;
+  document.getElementById('modalNotes').value = existing ? existing.notes || '' : '';
   document.getElementById('modalOverlay').classList.add('open');
 }
 
@@ -1388,6 +1407,9 @@ function editConf(quarterIdx) {
   const isHistorical = quarterIdx < 0;
   document.getElementById('modalQuarterLabel').value = isHistorical ? `Historical entry · ${fmtDate(parseDate(c.startDate))}` : `Cycle ${quarterIdx + 1}`;
   document.getElementById('modalStartDate').value = c.startDate;
+  const hasDuration = c.duration != null;
+  document.getElementById('modalDurationKnown').checked = hasDuration;
+  document.getElementById('modalDurationRow').style.display = hasDuration ? 'flex' : 'none';
   document.getElementById('modalDuration').value = c.duration || 5;
   document.getElementById('modalNotes').value = c.notes || '';
   document.getElementById('modalOverlay').classList.add('open');
@@ -1398,7 +1420,8 @@ function closeModal() {
 }
 function submitConfirmation() {
   const startDate = document.getElementById('modalStartDate').value;
-  const duration = parseInt(document.getElementById('modalDuration').value) || 5;
+  const durationKnown = document.getElementById('modalDurationKnown').checked;
+  const duration = durationKnown ? (parseInt(document.getElementById('modalDuration').value) || 5) : null;
   const notes = document.getElementById('modalNotes').value.trim();
   if (!startDate) { alert('Please enter a start date'); return; }
 
@@ -1410,6 +1433,11 @@ function submitConfirmation() {
     notes,
     loggedAt: new Date().toISOString(),
   });
+  // Update lastPeriodStart if this is cycle 0 or 1 (most recent confirmed)
+  const allConfirmed = confirmations.filter(c => c.quarterIdx >= 0).sort((a,b) => a.quarterIdx - b.quarterIdx);
+  if (allConfirmed.length > 0) {
+    lastPeriodStart = parseDate(allConfirmed[0].startDate);
+  }
   save();
   closeModal();
   render();
@@ -1685,7 +1713,18 @@ function renderPredictions() {
   const preds = computePredictions();
 
   if (preds.length === 0) {
-    card.style.display = 'none';
+    card.style.display = 'block';
+    const momentCounts = {};
+    moments.forEach(m => { momentCounts[m.type] = (momentCounts[m.type]||0)+1; });
+    const needed = Object.entries(MOMENT_LABELS).map(([k,l]) => {
+      const c = momentCounts[k]||0;
+      return `<span style="color:${c>=3?'var(--ovulation)':'var(--text-muted)'}">${l}: ${c}/3</span>`;
+    }).join(' &nbsp;·&nbsp; ');
+    card.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.1rem 1.4rem">
+      <div style="font-family:'Playfair Display',serif;font-size:1rem;font-style:italic;color:var(--text-muted);margin-bottom:0.5rem">Predicted windows</div>
+      <div style="font-size:0.82rem;color:var(--text-muted);line-height:1.6">Need at least <strong style="color:var(--text)">3 logged moments</strong> of the same type to generate predictions.<br>
+      <div style="margin-top:0.6rem;font-size:0.75rem">${needed}</div></div>
+    </div>`;
     return;
   }
   card.style.display = 'block';
@@ -1775,7 +1814,7 @@ function renderLog() {
     return `<tr>
       <td style="color:var(--text-muted)">${logDate}</td>
       <td><strong>${fmtDate(parseDate(c.startDate))}</strong></td>
-      <td>${c.duration} days</td>
+      <td style="color:var(--text-muted)">${c.duration != null ? c.duration+' days' : '&mdash;'}</td>
       <td><span style="font-size:0.72rem;padding:0.15rem 0.5rem;border-radius:10px;background:${isHistorical ? 'rgba(139,92,246,0.15)' : 'rgba(96,165,250,0.12)'};color:${isHistorical ? '#a78bfa' : 'var(--follicular)'}">${qLabel}</span></td>
       <td>${gapCell}</td>
       <td style="color:var(--text-muted);font-size:0.77rem">${c.notes || '&mdash;'}</td>
@@ -1851,49 +1890,32 @@ document.getElementById('startModalOverlay').addEventListener('click', e => { if
 // ── Init ──────────────────────────────────────────────────────────────────────
 load();
 
-// Force reseed with all confirmed dates and correct cycle length
-// Gaps: Sep5→Oct2=27d, Oct2→Dec17=76d(gap), Dec17→Jan11=25d, Jan11→Feb6=26d, Feb6→Mar4=26d
-// Reliable single-cycle gaps: 27, 25, 26, 26 → average = 26 days
-(function reseed() {
+// Seed only if this is a completely fresh install (no data at all)
+(function seedIfEmpty() {
+  if (lastPeriodStart || confirmations.length > 0) return; // already has data, don't overwrite
+
   const knownDates = [
     { date: '2025-09-05', notes: 'Historical — Sep5→Oct2 gap: 27 days' },
     { date: '2025-10-02', notes: 'Historical — Oct2→Dec17 gap: 76 days (cycles unknown)' },
     { date: '2025-12-17', notes: 'Historical — Dec17→Jan11 gap: 25 days' },
     { date: '2026-01-11', notes: 'Historical — Jan11→Feb6 gap: 26 days' },
     { date: '2026-02-06', notes: 'Historical — Feb6→Mar4 gap: 26 days' },
-    { date: '2026-03-04', notes: 'Current cycle start (confirmed)' },
+    { date: '2026-03-04', notes: 'Cycle 1 start (confirmed)' },
   ];
 
-  // Always reseed historical entries to ensure they are current
-  // Remove all historical entries and re-add them
-  confirmations = confirmations.filter(c => c.quarterIdx >= 0);
-
   knownDates.forEach((d, i) => {
-    const isCurrentCycle = d.date === '2026-03-04';
-    if (isCurrentCycle) {
-      // Ensure current cycle (quarterIdx 0) is confirmed
-      if (!confirmations.find(c => c.quarterIdx === 0)) {
-        confirmations.push({
-          quarterIdx: 0,
-          startDate: d.date,
-          duration: 5,
-          notes: d.notes,
-          loggedAt: new Date().toISOString(),
-        });
-      }
-    } else {
-      confirmations.push({
-        quarterIdx: -(i + 1),
-        startDate: d.date,
-        duration: 5,
-        notes: d.notes,
-        loggedAt: new Date().toISOString(),
-      });
-    }
+    const isFirst = d.date === '2026-03-04';
+    confirmations.push({
+      quarterIdx: isFirst ? 0 : -(i + 1),
+      startDate: d.date,
+      duration: null,
+      notes: d.notes,
+      loggedAt: new Date().toISOString(),
+    });
   });
 
   cycleLength = 26;
-  lastPeriodStart = new Date('2026-03-04');
+  lastPeriodStart = parseDate('2026-03-04');
   save();
 })();
 
